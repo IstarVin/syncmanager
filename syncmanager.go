@@ -13,28 +13,14 @@ func NewSyncManager(concurrent int) *SyncManager {
 	return syncManager
 }
 
-func NewSyncManagerWait(concurrent int) *SyncManager {
-	syncManager := NewSyncManager(concurrent)
-
-	syncManager.shouldWait = true
-	syncManager.Wait = func() {
-		syncManager.isWaiting = true
-		<-syncManager.exitCh
-	}
-
-	return syncManager
-}
-
 type SyncManager struct {
 	QueueList []*Queue
-	Wait      func()
 
 	addQueue  chan struct{}
 	doneQueue chan struct{}
 	exitCh    chan struct{}
 
 	concurrent int
-	shouldWait bool
 	isWaiting  bool
 }
 
@@ -44,6 +30,11 @@ func (s *SyncManager) Add(f func(...any), args ...any) {
 		Args: args,
 	})
 	s.addQueue <- struct{}{}
+}
+
+func (s *SyncManager) Wait() {
+	s.isWaiting = true
+	<-s.exitCh
 }
 
 func (s *SyncManager) daemon() {
@@ -67,8 +58,8 @@ func (s *SyncManager) daemon() {
 			running++
 		}
 
-		if s.shouldWait && s.isWaiting && running == 0 {
-			s.exitCh <- struct{}{}
+		if s.isWaiting && running == 0 {
+			close(s.exitCh)
 			break
 		}
 	}

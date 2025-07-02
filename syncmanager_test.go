@@ -7,7 +7,7 @@ import (
 )
 
 func TestSyncManager(t *testing.T) {
-	syncManager := NewSyncManagerWait(2)
+	syncManager := NewSyncManager(2)
 
 	for i := 0; i < 10; i++ {
 		randInt := rand.Intn(5)
