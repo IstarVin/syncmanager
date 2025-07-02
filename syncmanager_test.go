@@ -10,7 +10,7 @@ func TestSyncManager(t *testing.T) {
 	syncManager := NewSyncManager(2)
 
 	for i := 0; i < 10; i++ {
-		randInt := rand.Intn(5)
+		randInt := rand.Intn(2)
 
 		syncManager.Add(func(a ...any) {
 			i := a[0].(int)

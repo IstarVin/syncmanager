@@ -1,6 +1,10 @@
 package syncmanager
 
 func NewSyncManager(concurrent int) *SyncManager {
+	if concurrent < 1 {
+		concurrent = 1
+	}
+
 	syncManager := new(SyncManager)
 
 	syncManager.concurrent = concurrent
