@@ -4,9 +4,9 @@ func NewSyncManager(concurrent int) *SyncManager {
 	syncManager := new(SyncManager)
 
 	syncManager.concurrent = concurrent
-	syncManager.addQueue = make(chan byte)
-	syncManager.doneQueue = make(chan byte)
-	syncManager.exitCh = make(chan byte)
+	syncManager.addQueue = make(chan struct{})
+	syncManager.doneQueue = make(chan struct{})
+	syncManager.exitCh = make(chan struct{})
 
 	go syncManager.daemon()
 
@@ -29,9 +29,9 @@ type SyncManager struct {
 	QueueList []*Queue
 	Wait      func()
 
-	addQueue  chan byte
-	doneQueue chan byte
-	exitCh    chan byte
+	addQueue  chan struct{}
+	doneQueue chan struct{}
+	exitCh    chan struct{}
 
 	concurrent int
 	shouldWait bool
@@ -43,7 +43,7 @@ func (s *SyncManager) Add(f func(...any), args ...any) {
 		Func: f,
 		Args: args,
 	})
-	s.addQueue <- 0
+	s.addQueue <- struct{}{}
 }
 
 func (s *SyncManager) daemon() {
@@ -61,14 +61,14 @@ func (s *SyncManager) daemon() {
 
 			go func() {
 				queue.Func(queue.Args...)
-				s.doneQueue <- 0
+				s.doneQueue <- struct{}{}
 			}()
 
 			running++
 		}
 
 		if s.shouldWait && s.isWaiting && running == 0 {
-			s.exitCh <- 0
+			s.exitCh <- struct{}{}
 			break
 		}
 	}
